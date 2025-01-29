@@ -1,0 +1,17 @@
+node_modules
+# Common ignores
+.env
+dist
+coverage
+.vscode
+.DS_Store
+Thumbs.db
+
+# Next.js build and output
+.next
+out
+# Logs
+*.log
+npm-debug.log
+yarn-error.log
+pnpm-debug.log

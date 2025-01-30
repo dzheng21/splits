@@ -6,7 +6,6 @@ import ItemList from "./components/ItemList";
 import PeopleList from "./components/PeopleList";
 import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
-import { AzureProvider } from "./api/AzureDoc";
 
 export default function Home() {
   const [items, setItems] = useState<
@@ -14,8 +13,14 @@ export default function Home() {
   >([]);
   const [people, setPeople] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
-const [tip, setTip] = useState<{ type: "percentage" | "amount"; value: number }>({ type: "percentage", value: 0 });
-const [tax, setTax] = useState<{ type: "percentage" | "amount"; value: number }>({ type: "percentage", value: 0 });
+  const [tip, setTip] = useState<{
+    type: "percentage" | "amount";
+    value: number;
+  }>({ type: "percentage", value: 0 });
+  const [tax, setTax] = useState<{
+    type: "percentage" | "amount";
+    value: number;
+  }>({ type: "percentage", value: 0 });
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [isManual, setIsManual] = useState(false);
 

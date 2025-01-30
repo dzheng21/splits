@@ -6,6 +6,7 @@ import ItemList from "./components/ItemList";
 import PeopleList from "./components/PeopleList";
 import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
+import { AzureProvider } from "./api/AzureDoc";
 
 export default function Home() {
   const [items, setItems] = useState<
@@ -13,8 +14,10 @@ export default function Home() {
   >([]);
   const [people, setPeople] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [tip, setTip] = useState({ type: "percentage", value: 0 });
-  const [tax, setTax] = useState({ type: "percentage", value: 0 });
+const [tip, setTip] = useState<{ type: "percentage" | "amount"; value: number }>({ type: "percentage", value: 0 });
+const [tax, setTax] = useState<{ type: "percentage" | "amount"; value: number }>({ type: "percentage", value: 0 });
+  const [receiptImage, setReceiptImage] = useState<File | null>(null);
+  const [isManual, setIsManual] = useState(false);
 
   const addItem = (item: {
     name: string;
@@ -50,6 +53,12 @@ export default function Home() {
     setShowResults(false);
   };
 
+  function handleReceiptUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    if (event.target.files && event.target.files.length > 0) {
+      setReceiptImage(event.target.files[0]);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -65,7 +74,36 @@ export default function Home() {
                   onAddPerson={addPerson}
                   onDeletePerson={deletePerson}
                 />
-                <ReceiptForm onAddItem={addItem} people={people} />
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Upload Receipt Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleReceiptUpload}
+                    className="text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-indigo-50 file:text-indigo-700
+                      hover:file:bg-indigo-100
+                    "
+                  />
+                </div>
+                <div
+                  className="flex items-center cursor-pointer"
+                  onClick={() => setIsManual(!isManual)}
+                >
+                  <span>
+                    {isManual
+                      ? "▲ Collapse Manual Entry"
+                      : "▼ Expand Manual Entry"}
+                  </span>
+                </div>
+                {isManual && (
+                  <ReceiptForm onAddItem={addItem} people={people} />
+                )}
                 <ItemList items={items} onDeleteItem={deleteItem} />
                 <TipTaxForm
                   tip={tip}

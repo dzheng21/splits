@@ -15,15 +15,27 @@ export default function TipTaxForm({
 }: TipTaxFormProps) {
   const [tipType, setTipType] = useState<"percentage" | "amount">(tip.type);
   const [taxType, setTaxType] = useState<"percentage" | "amount">(tax.type);
+  const [tipError, setTipError] = useState("");
+  const [taxError, setTaxError] = useState("");
 
   const handleTipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value);
     onTipChange({ type: tipType, value: isNaN(value) ? 0 : value });
+    if (tipType === "percentage" && value > 100) {
+      setTipError("Are you sure? Tip exceeds 100%");
+    } else {
+      setTipError("");
+    }
   };
 
   const handleTaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === "" ? 0 : Number.parseFloat(e.target.value);
     onTaxChange({ type: taxType, value: isNaN(value) ? 0 : value });
+    if (taxType === "percentage" && value > 100) {
+      setTaxError("Are you sure? Tax exceeds 100%");
+    } else {
+      setTaxError("");
+    }
   };
 
   return (
@@ -48,8 +60,8 @@ export default function TipTaxForm({
               }}
               className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="percentage">Percentage</option>
-              <option value="amount">Amount</option>
+              <option value="percentage">%</option>
+              <option value="amount">$</option>
             </select>
             <input
               type="number"
@@ -60,8 +72,8 @@ export default function TipTaxForm({
               className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               placeholder={tipType === "percentage" ? "Enter %" : "Enter $"}
             />
-            <span>{tipType === "percentage" ? "%" : "$"}</span>
           </div>
+          {tipError && <p className="text-red-500 text-sm">{tipError}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -79,8 +91,8 @@ export default function TipTaxForm({
               }}
               className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="percentage">Percentage</option>
-              <option value="amount">Amount</option>
+              <option value="percentage">%</option>
+              <option value="amount">$</option>
             </select>
             <input
               type="number"
@@ -91,8 +103,8 @@ export default function TipTaxForm({
               className="flex-grow p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
               placeholder={taxType === "percentage" ? "Enter %" : "Enter $"}
             />
-            <span>{taxType === "percentage" ? "%" : "$"}</span>
           </div>
+          {taxError && <p className="text-red-500 text-sm">{taxError}</p>}
         </div>
       </div>
     </div>

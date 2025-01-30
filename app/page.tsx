@@ -12,7 +12,6 @@ export default function Home() {
     Array<{ name: string; price: number; sharedBy: string[] }>
   >([]);
   const [people, setPeople] = useState<string[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [tip, setTip] = useState<{
     type: "percentage" | "amount";
     value: number;
@@ -23,6 +22,7 @@ export default function Home() {
   }>({ type: "percentage", value: 0 });
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [isManual, setIsManual] = useState(false);
+  const [step, setStep] = useState(0);
 
   const addItem = (item: {
     name: string;
@@ -51,87 +51,137 @@ export default function Home() {
   };
 
   const calculateSplit = () => {
-    setShowResults(true);
+    setStep(4);
   };
 
   const resetApp = () => {
-    setShowResults(false);
+    setStep(0);
   };
 
   function handleReceiptUpload(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.files && event.target.files.length > 0) {
       setReceiptImage(event.target.files[0]);
+      setStep(1);
     }
   }
 
+  function nextStep() {
+    setStep((prev) => prev + 1);
+  }
+
+  function prevStep() {
+    setStep((prev) => (prev > 0 ? prev - 1 : 0));
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 sm:p-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-6">
-            Splits
-          </h1>
-          {!showResults ? (
+    <div className="bg-gray-50 text-gray-800 p-2 sm:p-4 flex min-h-screen">
+      <div className="w-full mx-auto bg-white rounded-md shadow-md p-2 sm:p-4">
+        <div
+          className={`p-4 sm:p-8 transition-opacity duration-500 justify-center items-center flex flex-col min-h-full ${
+            step === 0 ? "opacity-100" : "opacity-100"
+          }`}
+        >
+          {step === 0 && (
             <>
-              <div className="space-y-8">
-                <PeopleList
-                  people={people}
-                  onAddPerson={addPerson}
-                  onDeletePerson={deletePerson}
-                />
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Upload Receipt Image
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleReceiptUpload}
-                    className="text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-indigo-50 file:text-indigo-700
-                      hover:file:bg-indigo-100
-                    "
-                  />
-                </div>
-                <div
-                  className="flex items-center cursor-pointer"
-                  onClick={() => setIsManual(!isManual)}
-                >
-                  <span>
-                    {isManual
-                      ? "▲ Collapse Manual Entry"
-                      : "▼ Expand Manual Entry"}
-                  </span>
-                </div>
-                {isManual && (
-                  <ReceiptForm onAddItem={addItem} people={people} />
-                )}
-                <ItemList items={items} onDeleteItem={deleteItem} />
-                <TipTaxForm
-                  tip={tip}
-                  tax={tax}
-                  onTipChange={setTip}
-                  onTaxChange={setTax}
-                />
-              </div>
+              <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-6">
+                Splits
+              </h1>
+              <h3 className="text-2xl sm:text-xl font-semibold text-gray-600 mb-6">
+                Upload Receipt Image
+              </h3>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleReceiptUpload}
+                className="text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-indigo-50 file:text-indigo-700
+            hover:file:bg-indigo-100
+          "
+              />
               <button
-                onClick={calculateSplit}
-                className="mt-8 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={nextStep}
+                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
               >
-                Calculate Split
+                Next →
               </button>
             </>
-          ) : (
+          )}
+
+          {step === 1 && (
+            <>
+              <PeopleList
+                people={people}
+                onAddPerson={addPerson}
+                onDeletePerson={deletePerson}
+              />
+              <button
+                onClick={nextStep}
+                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
+              >
+                Next →
+              </button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <button
+                className="mt-4 w-full bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
+                onClick={() => setIsManual(!isManual)}
+              >
+                {isManual ? "Collapse Manual Entry" : "Show Manual Entry"}
+              </button>
+              {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
+              <ItemList items={items} onDeleteItem={deleteItem} />
+              <button
+                onClick={prevStep}
+                className="mt-8 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={nextStep}
+                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
+              >
+                Next →
+              </button>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <TipTaxForm
+                tip={tip}
+                tax={tax}
+                onTipChange={setTip}
+                onTaxChange={setTax}
+              />
+              <button
+                onClick={prevStep}
+                className="mt-8 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={calculateSplit}
+                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
+              >
+                Next →
+              </button>
+            </>
+          )}
+
+          {step === 4 && (
             <>
               <Results items={items} people={people} tip={tip} tax={tax} />
               <button
                 onClick={resetApp}
-                className="mt-6 w-full bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                className="mt-6 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
               >
-                Back to Bill Splitting
+                Back to Start
               </button>
             </>
           )}

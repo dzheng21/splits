@@ -22,7 +22,7 @@ export default function PeopleList({
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl shadow-md">
+    <div className="bg-gray-50 p-4 sm:p-8 m-2 rounded-xl shadow-md w-full mx-auto">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
         People Splitting the Bill
       </h2>

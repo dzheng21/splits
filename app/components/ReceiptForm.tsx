@@ -35,7 +35,7 @@ export default function ReceiptForm({ onAddItem, people }: ReceiptFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-gray-50 p-4 sm:p-6 rounded-xl shadow-md"
+      className="bg-gray-50 p-4 sm:p-8 rounded-xl shadow-md w-full mx-auto"
     >
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
         Add Item to Receipt

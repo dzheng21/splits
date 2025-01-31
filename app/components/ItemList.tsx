@@ -11,7 +11,7 @@ type ItemListProps = {
 
 export default function ItemList({ items, onDeleteItem }: ItemListProps) {
   return (
-    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl shadow-md">
+    <div className="bg-gray-50 p-4 sm:p-8 rounded-xl shadow-md w-full mx-auto">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
         Receipt Items
       </h2>

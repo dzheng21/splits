@@ -76,7 +76,7 @@ export default function Results({ items, people, tip, tax }: ResultsProps) {
   };
 
   return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow-md">
+    <div className="bg-gray-50 p-4 rounded-xl shadow-md min-w-full mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-indigo-800">
         Bill Split Results
       </h2>
@@ -111,7 +111,7 @@ export default function Results({ items, people, tip, tax }: ResultsProps) {
         onClick={copyToClipboard}
         className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
       >
-        {copySuccess ? "Copied!" : "Copy Summary for Group Chat"}
+        {copySuccess ? "Copied!" : "Copy summary"}
       </button>
       {copySuccess && (
         <p className="text-green-600 text-center mt-2">

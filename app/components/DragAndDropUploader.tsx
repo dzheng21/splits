@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 
 interface DragAndDropUploaderProps {
-  onFilesUploaded: (files: FileList) => void;
+  onFilesUploaded: (files: FileList) => Promise<void>;
 }
 
 const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
@@ -49,28 +49,30 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
   );
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      className={`border-2 border-dashed p-6 rounded-lg h-24 flex items-center text-gray-400 justify-center w-full ${
-        isDragging
-          ? "border-blue-400 bg-blue-50 text-blue-400"
-          : "border-gray-200"
-      } hover:border-blue-400 hover:cursor-pointer hover:text-blue-400 hover:bg-blue-50`}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
-      <p className="text-sm w-80 text-center">
-        {isDragging
-          ? "Drop the file here..."
-          : "Drag & drop a file here, or click to select"}
-      </p>
+    <div className={`pl-4 pr-4`}>
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        className={`border-2 border-dashed p-4 rounded-lg h-24 flex items-center text-gray-400 justify-center w-full ${
+          isDragging
+            ? "border-blue-400 bg-blue-50 text-blue-400"
+            : "border-gray-200"
+        } hover:border-blue-400 hover:cursor-pointer hover:text-blue-400 hover:bg-blue-50`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
+        <p className="text-sm w-80 text-center">
+          {isDragging
+            ? "Drop the file here..."
+            : "Drag & drop a file here, or click to select"}
+        </p>
+      </div>
     </div>
   );
 };

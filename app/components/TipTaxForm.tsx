@@ -39,7 +39,7 @@ export default function TipTaxForm({
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl shadow-md">
+    <div className="bg-gray-50 p-4 sm:p-8 rounded-xl w-full mx-auto shadow-md">
       <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
         Tip and Tax
       </h2>

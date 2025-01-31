@@ -6,6 +6,8 @@ import ItemList from "./components/ItemList";
 import PeopleList from "./components/PeopleList";
 import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
+import DragAndDropUploader from "./components/DragAndDropUploader";
+import { ChevronDown, ChevronUp } from "./components/utils";
 
 export default function Home() {
   const [items, setItems] = useState<
@@ -23,6 +25,7 @@ export default function Home() {
   const [receiptImage, setReceiptImage] = useState<File | null>(null);
   const [isManual, setIsManual] = useState(false);
   const [step, setStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const addItem = (item: {
     name: string;
@@ -58,9 +61,24 @@ export default function Home() {
     setStep(0);
   };
 
-  function handleReceiptUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    if (event.target.files && event.target.files.length > 0) {
-      setReceiptImage(event.target.files[0]);
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleReceiptUpload(files: FileList) {
+    if (files.length > 0) {
+      setIsLoading(true);
+      try {
+        const base64File = await fileToBase64(files[0]);
+        // Call vision provider or API endpoint with base64File
+      } finally {
+        setIsLoading(false);
+      }
       setStep(1);
     }
   }
@@ -73,11 +91,28 @@ export default function Home() {
     setStep((prev) => (prev > 0 ? prev - 1 : 0));
   }
 
+  const navigationButtons = (
+    <div className="flex flex-row justify-between w-full">
+      <button
+        onClick={prevStep}
+        className="mt-2 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+      >
+        Back
+      </button>
+      <button
+        onClick={nextStep}
+        className="mt-2 bg-gray-900 text-white flex font-semibold justify-center py-2 px-4 rounded-md transition-all hover:bg-gray-700"
+      >
+        →
+      </button>
+    </div>
+  );
+
   return (
     <div className="bg-gray-50 text-gray-800 p-2 sm:p-4 flex min-h-screen">
       <div className="w-full mx-auto bg-white rounded-md shadow-md p-2 sm:p-4">
         <div
-          className={`p-4 sm:p-8 transition-opacity duration-500 justify-center items-center flex flex-col min-h-full ${
+          className={`p-1 sm:p-2 transition-opacity duration-500 justify-start pt-20 items-center flex flex-col min-h-full ${
             step === 0 ? "opacity-100" : "opacity-100"
           }`}
         >
@@ -86,27 +121,18 @@ export default function Home() {
               <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-6">
                 Splits
               </h1>
-              <h3 className="text-2xl sm:text-xl font-semibold text-gray-600 mb-6">
+              <h3 className="text-xl sm:text-l font-semibold text-gray-600 mb-6">
                 Upload Receipt Image
               </h3>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleReceiptUpload}
-                className="text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-indigo-50 file:text-indigo-700
-            hover:file:bg-indigo-100
-          "
-              />
-              <button
-                onClick={nextStep}
-                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-              >
-                Next →
-              </button>
+              <DragAndDropUploader onFilesUploaded={handleReceiptUpload} />
+              <div className="flex flex-row justify-end w-full">
+                <button
+                  onClick={nextStep}
+                  className="mt-2 bg-gray-900 text-white flex font-semibold justify-center py-2 px-4 rounded-md transition-all hover:bg-gray-700"
+                >
+                  →
+                </button>
+              </div>
             </>
           )}
 
@@ -117,37 +143,22 @@ export default function Home() {
                 onAddPerson={addPerson}
                 onDeletePerson={deletePerson}
               />
-              <button
-                onClick={nextStep}
-                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-              >
-                Next →
-              </button>
+              {navigationButtons}
             </>
           )}
 
           {step === 2 && (
             <>
-              <button
-                className="mt-4 w-full bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
-                onClick={() => setIsManual(!isManual)}
-              >
-                {isManual ? "Collapse Manual Entry" : "Show Manual Entry"}
-              </button>
-              {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
+              {isLoading && <div className="mt-2">Processing receipt...</div>}
               <ItemList items={items} onDeleteItem={deleteItem} />
               <button
-                onClick={prevStep}
-                className="mt-8 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
+                className="mt-4 w-1/2 text-navy-800 font-semibold py-4 px-8 rounded-md transition-colors"
+                onClick={() => setIsManual(!isManual)}
               >
-                Back
+                {isManual ? "- hide" : "+ add more"}
               </button>
-              <button
-                onClick={nextStep}
-                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-              >
-                Next →
-              </button>
+              {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
+              {navigationButtons}
             </>
           )}
 
@@ -159,18 +170,7 @@ export default function Home() {
                 onTipChange={setTip}
                 onTaxChange={setTax}
               />
-              <button
-                onClick={prevStep}
-                className="mt-8 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Back
-              </button>
-              <button
-                onClick={calculateSplit}
-                className="mt-4 w-1/3 bg-gray-900 text-white flex items-center justify-center font-semibold py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-              >
-                Next →
-              </button>
+              {navigationButtons}
             </>
           )}
 
@@ -179,9 +179,9 @@ export default function Home() {
               <Results items={items} people={people} tip={tip} tax={tax} />
               <button
                 onClick={resetApp}
-                className="mt-6 w-1/3 bg-gray-200 text-gray-800 font-semibold py-4 px-8 rounded-md hover:bg-gray-300 transition-colors"
+                className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
               >
-                Back to Start
+                Back to start
               </button>
             </>
           )}

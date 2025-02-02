@@ -9,6 +9,21 @@ import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
 import { ChevronDown, ChevronUp } from "./components/utils";
 
+// Font imports
+import { EB_Garamond, Inter } from "next/font/google";
+
+const garamond = EB_Garamond({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-garamond",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
 export default function Home() {
   const [items, setItems] = useState<
     Array<{ name: string; price: number; sharedBy: string[] }>
@@ -91,99 +106,180 @@ export default function Home() {
     setStep((prev) => (prev > 0 ? prev - 1 : 0));
   }
 
-  const navigationButtons = (
-    <div className="flex flex-row justify-between w-full">
-      <button
-        onClick={prevStep}
-        className="mt-2 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
-      >
-        Back
-      </button>
-      <button
-        onClick={nextStep}
-        className="mt-2 bg-gray-900 text-white flex font-semibold justify-center py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-      >
-        →
-      </button>
-    </div>
-  );
-
   return (
-    <div className="bg-gray-50 text-gray-800 p-2 sm:p-4 flex min-h-screen">
-      <div className="w-full mx-auto bg-white rounded-md shadow-md p-2 sm:p-4">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 text-slate-800 p-4 sm:p-6 flex ${garamond.variable} ${inter.variable} font-sans`}
+    >
+      <div className="w-full max-w-4xl mx-auto">
         <div
-          className={`p-1 sm:p-2 transition-opacity duration-500 justify-start pt-20 items-center flex flex-col min-h-full ${
-            step === 0 ? "opacity-100" : "opacity-100"
+          className={`transition-all duration-500 ease-in-out ${
+            step === 0 ? "pt-12 sm:pt-20" : "pt-8 sm:pt-12"
           }`}
         >
           {step === 0 && (
-            <>
-              <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-6">
-                Splits
-              </h1>
-              <h3 className="text-xl sm:text-l font-semibold text-gray-600 mb-6">
-                Upload Receipt Image
-              </h3>
-              <DragAndDropUploader onFilesUploaded={handleReceiptUpload} />
-              <div className="flex flex-row justify-end w-full">
-                <button
-                  onClick={nextStep}
-                  className="mt-2 bg-gray-900 text-white flex font-semibold justify-center py-2 px-4 rounded-md transition-all hover:bg-gray-700"
-                >
-                  →
-                </button>
+            <div className="w-full max-w-2xl mx-auto">
+              <div className="mb-12 text-center">
+                <h1 className="font-serif text-5xl sm:text-6xl font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text pb-2 bg-opacity-75">
+                  splits
+                </h1>
+                <p className="text-slate-400 font-sm text-sm">
+                  Split bills effortlessly with friends
+                </p>
               </div>
-            </>
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
+                <h3 className="text-xl font-medium text-slate-700 mb-6">
+                  Upload Receipt Image
+                </h3>
+                <DragAndDropUploader onFilesUploaded={handleReceiptUpload} />
+                <div className="flex flex-row justify-end w-full mt-6">
+                  <button
+                    onClick={nextStep}
+                    className="group bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium px-6 py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 flex items-center gap-2"
+                  >
+                    Continue
+                    <span className="transform transition-transform group-hover:translate-x-1">
+                      →
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {step === 1 && (
-            <>
+            <div className="w-full max-w-2xl mx-auto">
               <PeopleList
                 people={people}
                 onAddPerson={addPerson}
                 onDeletePerson={deletePerson}
               />
-              {navigationButtons}
-            </>
+              <div className="flex flex-row justify-between w-full mt-6 gap-4">
+                <button
+                  onClick={prevStep}
+                  className="px-6 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span className="transform transition-transform group-hover:-translate-x-1">
+                    ←
+                  </span>
+                  Back
+                </button>
+                <button
+                  onClick={nextStep}
+                  className="group bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium px-6 py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 flex items-center gap-2"
+                >
+                  Continue
+                  <span className="transform transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </button>
+              </div>
+            </div>
           )}
 
           {step === 2 && (
-            <>
-              {isLoading && <div className="mt-2">Processing receipt...</div>}
+            <div className="w-full max-w-2xl mx-auto">
+              {isLoading && (
+                <div className="mb-4 p-4 bg-indigo-50 text-indigo-700 rounded-xl flex items-center gap-3">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Processing receipt...
+                </div>
+              )}
               <ItemList items={items} onDeleteItem={deleteItem} />
               <button
-                className="mt-4 w-1/2 text-navy-800 font-semibold py-4 px-8 rounded-md transition-colors"
+                className="mt-6 w-full text-slate-600 font-medium py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsManual(!isManual)}
               >
-                {isManual ? "- hide" : "+ add more"}
+                {isManual ? (
+                  <>
+                    <span className="text-lg">−</span> Hide manual entry
+                  </>
+                ) : (
+                  <>
+                    <span className="text-lg">+</span> Add items manually
+                  </>
+                )}
               </button>
               {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
-              {navigationButtons}
-            </>
+              <div className="flex flex-row justify-between w-full mt-6 gap-4">
+                <button
+                  onClick={prevStep}
+                  className="px-6 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span className="transform transition-transform group-hover:-translate-x-1">
+                    ←
+                  </span>
+                  Back
+                </button>
+                <button
+                  onClick={nextStep}
+                  className="group bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium px-6 py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 flex items-center gap-2"
+                >
+                  Continue
+                  <span className="transform transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </button>
+              </div>
+            </div>
           )}
 
           {step === 3 && (
-            <>
+            <div className="w-full max-w-2xl mx-auto">
               <TipTaxForm
                 tip={tip}
                 tax={tax}
                 onTipChange={setTip}
                 onTaxChange={setTax}
               />
-              {navigationButtons}
-            </>
+              <div className="flex flex-row justify-between w-full mt-6 gap-4">
+                <button
+                  onClick={prevStep}
+                  className="px-6 py-3 rounded-xl font-medium text-slate-700 hover:bg-slate-100 transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span className="transform transition-transform group-hover:-translate-x-1">
+                    ←
+                  </span>
+                  Back
+                </button>
+                <button
+                  onClick={nextStep}
+                  className="group bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-medium px-6 py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 flex items-center gap-2"
+                >
+                  Calculate Split
+                  <span className="transform transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
+                </button>
+              </div>
+            </div>
           )}
 
           {step === 4 && (
-            <>
-              <Results items={items} people={people} tip={tip} tax={tax} />
-              <button
-                onClick={resetApp}
-                className="mt-4 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Back to start
-              </button>
-            </>
+            <div className="w-full max-w-2xl mx-auto">
+              <Results
+                items={items}
+                people={people}
+                tip={tip}
+                tax={tax}
+                onBack={prevStep}
+                onReset={resetApp}
+              />
+            </div>
           )}
         </div>
       </div>

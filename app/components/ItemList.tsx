@@ -11,25 +11,40 @@ type ItemListProps = {
 
 export default function ItemList({ items, onDeleteItem }: ItemListProps) {
   return (
-    <div className="bg-gray-50 p-4 sm:p-8 rounded-xl shadow-md w-full mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
+    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
+      <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-6">
         Receipt Items
       </h2>
       {items.length === 0 ? (
-        <p className="text-gray-500 italic">No items added yet.</p>
+        <div className="text-center py-8">
+          <p className="text-slate-500 text-lg mb-2">No items added yet</p>
+          <p className="text-slate-400">
+            Add items manually or upload a receipt
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {items.map((item, index) => (
-            <li key={index} className="bg-white p-3 rounded-lg shadow">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-800">{item.name}</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-indigo-600 font-semibold">
+            <li
+              key={index}
+              className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:border-slate-200 transition-colors"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="space-y-1">
+                  <span className="text-lg text-slate-800 font-medium">
+                    {item.name}
+                  </span>
+                  <div className="text-slate-500 text-sm sm:text-base">
+                    Shared by: {item.sharedBy.join(", ")}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 self-end sm:self-center">
+                  <span className="font-serif text-xl text-indigo-600">
                     ${item.price.toFixed(2)}
                   </span>
                   <button
                     onClick={() => onDeleteItem(index)}
-                    className="text-red-500 hover:text-red-700 focus:outline-none"
+                    className="p-2 -m-2 text-slate-400 hover:text-red-500 focus:outline-none transition-colors"
                     aria-label={`Delete ${item.name}`}
                   >
                     <svg
@@ -46,9 +61,6 @@ export default function ItemList({ items, onDeleteItem }: ItemListProps) {
                     </svg>
                   </button>
                 </div>
-              </div>
-              <div className="text-sm text-gray-500 mt-1">
-                Shared by: {item.sharedBy.join(", ")}
               </div>
             </li>
           ))}

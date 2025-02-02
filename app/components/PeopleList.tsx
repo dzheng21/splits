@@ -22,38 +22,52 @@ export default function PeopleList({
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-8 m-2 rounded-xl shadow-md w-full mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-indigo-800">
-        People Splitting the Bill
+    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
+      <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-6">
+        Who's Splitting?
       </h2>
-      <form onSubmit={handleSubmit} className="flex mb-4">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col sm:flex-row gap-2 mb-6"
+      >
         <input
           type="text"
           value={newPerson}
           onChange={(e) => setNewPerson(e.target.value)}
-          className="flex-grow p-2 border border-gray-300 rounded-l-md focus:ring-indigo-500 focus:border-indigo-500"
+          className="flex-grow px-4 py-4 sm:py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-lg"
           placeholder="Enter name"
         />
         <button
           type="submit"
-          className="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-lg px-6 py-4 sm:py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 whitespace-nowrap flex items-center justify-center gap-2"
         >
-          Add
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+          </svg>
+          Add Person
         </button>
       </form>
       {people.length === 0 ? (
-        <p className="text-gray-500 italic">No people added yet.</p>
+        <div className="text-center py-8">
+          <p className="text-slate-500 text-lg mb-2">No people added yet</p>
+          <p className="text-slate-400">Add someone to get started</p>
+        </div>
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {people.map((person, index) => (
             <li
               key={index}
-              className="bg-white p-2 rounded-lg shadow flex justify-between items-center"
+              className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center group hover:border-slate-200 transition-colors"
             >
-              <span>{person}</span>
+              <span className="text-lg text-slate-700">{person}</span>
               <button
                 onClick={() => onDeletePerson(person)}
-                className="text-red-500 hover:text-red-700 focus:outline-none"
+                className="p-2 -m-2 text-slate-400 hover:text-red-500 focus:outline-none transition-colors"
                 aria-label={`Delete ${person}`}
               >
                 <svg

@@ -1,6 +1,7 @@
 "use server";
 
 import axios from "axios";
+import { receiptExtractionPrompt } from "./utils";
 
 interface ApiResponse {
   choices?: { message?: { content?: string } }[];
@@ -25,6 +26,7 @@ export default async function gpt4oProvider(base64File: string) {
         content: [
           {
             type: "text",
+            text: receiptExtractionPrompt,
           },
         ],
       },
@@ -61,6 +63,7 @@ export default async function gpt4oProvider(base64File: string) {
 
   try {
     const response = await axios.request(config);
+    console.log(response.data);
     const parsed = parseGpt4oResponse(response.data);
     return { success: true, data: parsed };
   } catch (error) {

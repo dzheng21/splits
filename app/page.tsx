@@ -8,6 +8,7 @@ import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
 import { ChevronDown, ChevronUp } from "./components/utils";
+import gpt4oProvider from "./api/VisionProvider";
 
 // Font imports
 import { EB_Garamond, Inter } from "next/font/google";
@@ -41,6 +42,12 @@ export default function Home() {
   const [isManual, setIsManual] = useState(false);
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const [vendorInfo, setVendorInfo] = useState<{
+    name: string;
+    date: string;
+  } | null>(null);
 
   const addItem = (item: {
     name: string;
@@ -68,6 +75,12 @@ export default function Home() {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const updateItemShares = (index: number, sharedBy: string[]) => {
+    setItems(
+      items.map((item, i) => (i === index ? { ...item, sharedBy } : item))
+    );
+  };
+
   const calculateSplit = () => {
     setStep(4);
   };
@@ -85,16 +98,78 @@ export default function Home() {
     });
   }
 
+  const processReceiptResponse = (data: any) => {
+    // Extract vendor information
+    if (data.vendor_info) {
+      setVendorInfo({
+        name: data.vendor_info.name || "Unknown Vendor",
+        date: data.vendor_info.date || new Date().toLocaleDateString(),
+      });
+    }
+
+    // Extract line items
+    const processedItems =
+      data.line_items?.map((item: any) => ({
+        name: item.item_name,
+        price: Number(item.subtotal || item.unit_price || 0),
+        sharedBy: [], // Initially empty, will be filled when people are added
+      })) || [];
+
+    // Set initial tax if present
+    if (data.totals?.tax) {
+      const subtotal =
+        data.totals.subtotal ||
+        processedItems.reduce(
+          (sum: number, item: { price: number }) => sum + item.price,
+          0
+        );
+      const taxValue = Number(data.totals.tax);
+      setTax({
+        type: "percentage",
+        value: (taxValue / subtotal) * 100,
+      });
+    }
+
+    // Set initial tip if present
+    if (data.totals?.tip) {
+      const tipValue = Number(data.totals.tip);
+      const tipPercentage = data.totals.tip_percentage;
+      setTip({
+        type: tipPercentage ? "percentage" : "amount",
+        value: tipPercentage || tipValue,
+      });
+    }
+
+    setItems(processedItems);
+  };
+
   async function handleReceiptUpload(files: FileList) {
     if (files.length > 0) {
       setIsLoading(true);
+      setIsProcessingReceipt(true);
+      setProcessingError(null);
       try {
         const base64File = await fileToBase64(files[0]);
-        // Call vision provider or API endpoint with base64File
+        const base64Data = base64File.split(",")[1] || base64File;
+
+        const result = await gpt4oProvider(base64Data);
+        console.log("Vision API Response:", result);
+
+        if (result.success && result.data) {
+          processReceiptResponse(result.data);
+          console.log("Successfully processed receipt:", result.data);
+        } else {
+          setProcessingError(result.error || "Failed to process receipt");
+          console.error("Failed to process receipt:", result.error);
+        }
+      } catch (error) {
+        setProcessingError((error as Error).message);
+        console.error("Error processing receipt:", error);
       } finally {
         setIsLoading(false);
+        setIsProcessingReceipt(false);
+        setStep(1); // Move to people input step regardless of result
       }
-      setStep(1);
     }
   }
 
@@ -199,7 +274,15 @@ export default function Home() {
                   Processing receipt...
                 </div>
               )}
-              <ItemList items={items} onDeleteItem={deleteItem} />
+              <ItemList
+                items={items}
+                onDeleteItem={deleteItem}
+                isProcessing={isProcessingReceipt}
+                processingError={processingError}
+                people={people}
+                onUpdateItemShares={updateItemShares}
+                onAddItem={addItem}
+              />
               <button
                 className="mt-6 w-full text-slate-600 font-medium py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsManual(!isManual)}
@@ -278,6 +361,7 @@ export default function Home() {
                 tax={tax}
                 onBack={prevStep}
                 onReset={resetApp}
+                vendorInfo={vendorInfo}
               />
             </div>
           )}

@@ -13,6 +13,7 @@ type ResultsProps = {
   tax: { type: "percentage" | "amount"; value: number };
   onBack: () => void;
   onReset: () => void;
+  vendorInfo?: { name: string; date: string } | null;
 };
 
 export default function Results({
@@ -22,6 +23,7 @@ export default function Results({
   tax,
   onBack,
   onReset,
+  vendorInfo,
 }: ResultsProps) {
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -56,6 +58,10 @@ export default function Results({
 
   const generateSummary = () => {
     let summary = "🧾 Bill Split Summary 🧾\n\n";
+    if (vendorInfo) {
+      summary += `${vendorInfo.name}\n`;
+      summary += `Date: ${vendorInfo.date}\n\n`;
+    }
     summary += "Items:\n";
     items.forEach((item) => {
       summary += `- ${item.name}: $${item.price.toFixed(
@@ -86,9 +92,17 @@ export default function Results({
 
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
-      <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-6">
+      <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-2">
         Split Results
       </h2>
+      {vendorInfo && (
+        <div className="mb-6">
+          <h3 className="text-xl text-slate-800 font-medium">
+            {vendorInfo.name}
+          </h3>
+          <p className="text-slate-500">{vendorInfo.date}</p>
+        </div>
+      )}
       <div className="bg-white rounded-xl p-4 sm:p-6 border border-slate-100 mb-6">
         <div className="space-y-3">
           <div className="flex justify-between items-center text-base sm:text-lg text-slate-600">

@@ -30,6 +30,9 @@ export default function ItemList({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(
+    null
+  );
   const [newItem, setNewItem] = useState<{ name: string; price: string }>({
     name: "",
     price: "",
@@ -77,6 +80,19 @@ export default function ItemList({
     }
   };
 
+  const handleSelectAll = (index: number) => {
+    onUpdateItemShares(index, [...people]);
+  };
+
+  const handleDeselectAll = (index: number) => {
+    onUpdateItemShares(index, []);
+  };
+
+  const handleItemClick = (index: number) => {
+    setSelectedItemIndex(index);
+    setIsReviewMode(false);
+  };
+
   const renderItemCard = (
     item: Item,
     index: number,
@@ -90,7 +106,10 @@ export default function ItemList({
       transition={{ duration: 0.3 }}
       className={`bg-white p-4 rounded-xl shadow-sm border ${
         isFocused ? "border-indigo-200 shadow-lg" : "border-slate-100"
-      } transition-colors`}
+      } transition-colors ${
+        !isFocused ? "hover:border-indigo-100 cursor-pointer" : ""
+      }`}
+      onClick={() => !isFocused && handleItemClick(index)}
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -104,7 +123,10 @@ export default function ItemList({
               ${item.price.toFixed(2)}
             </span>
             <button
-              onClick={() => handleDeleteItem(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteItem(index);
+              }}
               className="p-2 -m-2 text-slate-400 hover:text-red-500 focus:outline-none transition-colors"
               aria-label={`Delete ${item.name}`}
             >
@@ -123,18 +145,43 @@ export default function ItemList({
             </button>
           </div>
         </div>
-        {isFocused && (
+        {(isFocused || selectedItemIndex === index) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-3"
           >
-            <p className="text-sm text-slate-500">Who's sharing this item?</p>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-slate-500">Who's sharing this item?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectAll(index);
+                  }}
+                  className="text-xs px-2 py-1 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                >
+                  Select All
+                </button>
+                {item.sharedBy.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeselectAll(index);
+                    }}
+                    className="text-xs px-2 py-1 rounded-md bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
               {people.map((person) => (
                 <button
                   key={person}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const newSharedBy = item.sharedBy.includes(person)
                       ? item.sharedBy.filter((p) => p !== person)
                       : [...item.sharedBy, person];
@@ -230,11 +277,21 @@ export default function ItemList({
         <h2 className="font-serif text-3xl font-medium font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text">
           {isReviewMode ? "Review Items" : "Tag Items"}
         </h2>
-        {!isReviewMode && items.length > 0 && !isAddingNew && (
-          <div className="text-sm text-slate-500">
-            Item {currentIndex + 1} of {items.length}
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          {!isReviewMode && items.length > 0 && !isAddingNew && (
+            <div className="text-sm text-slate-500">
+              Item {currentIndex + 1} of {items.length}
+            </div>
+          )}
+          {!isAddingNew && items.length > 0 && (
+            <button
+              onClick={() => setIsReviewMode(!isReviewMode)}
+              className="text-sm px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+            >
+              {isReviewMode ? "Tag" : "Review"}
+            </button>
+          )}
+        </div>
       </div>
 
       {processingError && (
@@ -315,7 +372,7 @@ export default function ItemList({
             <div className="flex justify-between items-center pt-4">
               {isReviewMode ? (
                 <div className="flex justify-end w-full gap-3">
-                  <button
+                  {/* <button
                     onClick={() => {
                       setIsReviewMode(false);
                       setCurrentIndex(items.length - 1);
@@ -323,7 +380,7 @@ export default function ItemList({
                     className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     Back to Tagging
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => setIsAddingNew(true)}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -344,9 +401,7 @@ export default function ItemList({
                     onClick={handleNext}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                   >
-                    {currentIndex === items.length - 1
-                      ? "Review All"
-                      : "Next →"}
+                    {currentIndex === items.length - 1 ? "Review" : "Next →"}
                   </button>
                 </div>
               )}

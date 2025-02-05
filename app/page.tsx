@@ -145,9 +145,12 @@ export default function Home() {
 
   async function handleReceiptUpload(files: FileList) {
     if (files.length > 0) {
-      setIsLoading(true);
       setIsProcessingReceipt(true);
       setProcessingError(null);
+
+      // Move to the next step immediately
+      setStep(1);
+
       try {
         const base64File = await fileToBase64(files[0]);
         const base64Data = base64File.split(",")[1] || base64File;
@@ -166,9 +169,7 @@ export default function Home() {
         setProcessingError((error as Error).message);
         console.error("Error processing receipt:", error);
       } finally {
-        setIsLoading(false);
         setIsProcessingReceipt(false);
-        setStep(1); // Move to people input step regardless of result
       }
     }
   }
@@ -193,7 +194,7 @@ export default function Home() {
         >
           {step === 0 && (
             <div className="w-full max-w-2xl mx-auto">
-              <div className="mb-12 text-center">
+              <div className="mb-8 text-center">
                 <h1 className="font-serif text-5xl sm:text-6xl font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text pb-2 bg-opacity-75">
                   splits
                 </h1>
@@ -202,7 +203,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
-                <h3 className="text-xl font-medium text-slate-700 mb-6">
+                <h3 className="text-2xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text font-semibold mb-6">
                   Upload Receipt Image
                 </h3>
                 <DragAndDropUploader onFilesUploaded={handleReceiptUpload} />
@@ -283,7 +284,7 @@ export default function Home() {
                 onUpdateItemShares={updateItemShares}
                 onAddItem={addItem}
               />
-              <button
+              {/* <button
                 className="mt-6 w-full text-slate-600 font-medium py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsManual(!isManual)}
               >
@@ -296,7 +297,7 @@ export default function Home() {
                     <span className="text-lg">+</span> Add items manually
                   </>
                 )}
-              </button>
+              </button> */}
               {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
               <div className="flex flex-row justify-between w-full mt-6 gap-4">
                 <button

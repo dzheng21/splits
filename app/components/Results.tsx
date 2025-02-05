@@ -92,7 +92,7 @@ export default function Results({
 
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
-      <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-2">
+      <h2 className="font-serif text-3xl font-medium font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text mb-2">
         Split Results
       </h2>
       {vendorInfo && (

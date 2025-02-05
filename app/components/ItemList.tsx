@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
 
 type Item = {
   name: string;
@@ -34,6 +35,13 @@ export default function ItemList({
     price: "",
   });
 
+  React.useEffect(() => {
+    if (currentIndex >= items.length && items.length > 0) {
+      setCurrentIndex(items.length - 1);
+      setIsReviewMode(false);
+    }
+  }, [items.length, currentIndex]);
+
   const handleNext = () => {
     if (currentIndex < items.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -58,6 +66,13 @@ export default function ItemList({
       setNewItem({ name: "", price: "" });
       setIsAddingNew(false);
       setCurrentIndex(items.length); // Move to the newly added item
+      setIsReviewMode(false);
+    }
+  };
+
+  const handleDeleteItem = (index: number) => {
+    onDeleteItem(index);
+    if (isReviewMode && items.length <= 1) {
       setIsReviewMode(false);
     }
   };
@@ -89,7 +104,7 @@ export default function ItemList({
               ${item.price.toFixed(2)}
             </span>
             <button
-              onClick={() => onDeleteItem(index)}
+              onClick={() => handleDeleteItem(index)}
               className="p-2 -m-2 text-slate-400 hover:text-red-500 focus:outline-none transition-colors"
               aria-label={`Delete ${item.name}`}
             >
@@ -149,6 +164,57 @@ export default function ItemList({
     </motion.li>
   );
 
+  const renderAddNewSection = () => (
+    <motion.div
+      key="add-new"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-4"
+    >
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">
+          Item Name
+        </label>
+        <input
+          type="text"
+          value={newItem.name}
+          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="Enter item name"
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">
+          Price
+        </label>
+        <input
+          type="number"
+          value={newItem.price}
+          onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+          step="0.01"
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="Enter price"
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setIsAddingNew(false)}
+          className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleAddNewItem}
+          disabled={!newItem.name || !newItem.price}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Add Item
+        </button>
+      </div>
+    </motion.div>
+  );
+
   if (isProcessing) {
     return (
       <div className="text-center py-8">
@@ -158,49 +224,53 @@ export default function ItemList({
     );
   }
 
-  if (processingError) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-red-500 mb-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 mx-auto"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
-        </div>
-        <p className="text-red-600 text-lg mb-2">Error Processing Receipt</p>
-        <p className="text-slate-500">{processingError}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-200/50">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="font-serif text-3xl font-medium bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text">
+        <h2 className="font-serif text-3xl font-medium font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-transparent bg-clip-text">
           {isReviewMode ? "Review Items" : "Tag Items"}
         </h2>
-        {!isReviewMode && items.length > 0 && (
+        {!isReviewMode && items.length > 0 && !isAddingNew && (
           <div className="text-sm text-slate-500">
             Item {currentIndex + 1} of {items.length}
           </div>
         )}
       </div>
 
+      {processingError && (
+        <div className="mb-6">
+          <div className="text-center py-8">
+            <div className="text-red-500 mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mx-auto"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <p className="text-red-600 text-lg mb-2">
+              Error Processing Receipt
+            </p>
+            <p className="text-slate-500 mb-4">{processingError}</p>
+          </div>
+        </div>
+      )}
+
       {items.length === 0 && !isAddingNew ? (
         <div className="text-center py-8">
           <p className="text-slate-500 text-lg mb-2">No items added yet</p>
           <p className="text-slate-400 mb-4">
-            Add items manually or upload a receipt
+            {processingError
+              ? "Start by adding items manually"
+              : "Add items manually or upload a receipt"}
           </p>
           <button
             onClick={() => setIsAddingNew(true)}
@@ -212,7 +282,7 @@ export default function ItemList({
       ) : (
         <div className="space-y-6">
           <AnimatePresence mode="wait">
-            {isReviewMode ? (
+            {isReviewMode && !isAddingNew ? (
               <motion.ul
                 key="review"
                 initial={{ opacity: 0 }}
@@ -223,58 +293,7 @@ export default function ItemList({
                 {items.map((item, index) => renderItemCard(item, index))}
               </motion.ul>
             ) : isAddingNew ? (
-              <motion.div
-                key="add-new"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Item Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newItem.name}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Enter item name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Price
-                  </label>
-                  <input
-                    type="number"
-                    value={newItem.price}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, price: e.target.value })
-                    }
-                    step="0.01"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Enter price"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setIsAddingNew(false)}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddNewItem}
-                    disabled={!newItem.name || !newItem.price}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Add Item
-                  </button>
-                </div>
-              </motion.div>
+              renderAddNewSection()
             ) : (
               <motion.ul
                 key="focus-mode"

@@ -7,7 +7,6 @@ import PeopleList from "./components/PeopleList";
 import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
-import { ChevronDown, ChevronUp } from "./components/utils";
 import gpt4oProvider from "./api/VisionProvider";
 
 // Font imports

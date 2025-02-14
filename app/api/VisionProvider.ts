@@ -9,12 +9,89 @@ interface ApiResponse {
 
 function parseGpt4oResponse(apiResponse: ApiResponse) {
   try {
-    const content = apiResponse?.choices?.[0]?.message?.content || "";
-    const cleanedContent = content.replace(/```json|```/g, "");
-    return JSON.parse(cleanedContent);
+    const content = apiResponse?.choices?.[0]?.message?.content;
+    if (!content) {
+      console.log("No content in GPT-4 response");
+      return null;
+    }
+
+    // If content is just a simple string without JSON markers, return it as is
+    if (!content.includes("{")) {
+      return content;
+    }
+
+    // Try to extract JSON content, handling both markdown-fenced and raw JSON
+    let jsonContent = content;
+    if (content.includes("```")) {
+      jsonContent = content.replace(/```json|```/g, "").trim();
+    }
+
+    // Clean up any trailing truncated properties
+    jsonContent = jsonContent.replace(/,\s*"[^"]*"\s*$/, ""); // Remove incomplete last property
+    jsonContent = jsonContent.replace(/,\s*$/, ""); // Remove trailing comma
+
+    // Ensure the JSON is properly closed
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+
+    for (let i = 0; i < jsonContent.length; i++) {
+      const char = jsonContent[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (char === "\\") {
+        escape = true;
+        continue;
+      }
+      if (char === '"' && !escape) {
+        inString = !inString;
+        continue;
+      }
+      if (!inString) {
+        if (char === "{" || char === "[") depth++;
+        if (char === "}" || char === "]") depth--;
+      }
+    }
+
+    // Close any unclosed brackets/braces
+    while (depth > 0) {
+      jsonContent += "}";
+      depth--;
+    }
+
+    try {
+      const parsed = JSON.parse(jsonContent);
+      return parsed;
+    } catch (parseError) {
+      console.log(
+        "Failed to parse as JSON, checking if it's a partial valid response"
+      );
+
+      // If we have line_items or vendor_info, it might be a valid partial response
+      if (
+        jsonContent.includes('"line_items"') ||
+        jsonContent.includes('"vendor_info"')
+      ) {
+        try {
+          // Try to extract just the valid part up to the last complete item
+          const validPart = jsonContent.replace(/,\s*[^,}]*$/, "}");
+          const parsed = JSON.parse(validPart);
+          if (parsed.line_items || parsed.vendor_info) {
+            console.log("Successfully parsed partial response");
+            return parsed;
+          }
+        } catch (e) {
+          console.log("Failed to parse partial response:", e);
+        }
+      }
+
+      return jsonContent; // Return the cleaned content as a fallback
+    }
   } catch (e) {
-    console.log((e as Error).message);
-    throw new Error("Failed to parse GPT-4o response");
+    console.log("Error processing GPT-4 response:", (e as Error).message);
+    return null;
   }
 }
 

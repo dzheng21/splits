@@ -30,6 +30,7 @@ export default function ItemList({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showError, setShowError] = useState(true);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(
     null
   );
@@ -101,15 +102,17 @@ export default function ItemList({
     <motion.li
       key={index}
       initial={isFocused ? { opacity: 0, y: 20 } : { opacity: 1 }}
-      animate={isFocused ? { opacity: 1, y: 0 } : { opacity: 0.6, scale: 0.95 }}
+      animate={isFocused ? { opacity: 1, y: 0 } : { opacity: 1 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className={`bg-white p-4 rounded-xl shadow-sm border ${
         isFocused ? "border-indigo-200 shadow-lg" : "border-slate-100"
       } transition-colors ${
-        !isFocused ? "hover:border-indigo-100 cursor-pointer" : ""
+        !isFocused && !isReviewMode
+          ? "hover:border-indigo-100 cursor-pointer"
+          : ""
       }`}
-      onClick={() => !isFocused && handleItemClick(index)}
+      onClick={() => !isFocused && !isReviewMode && handleItemClick(index)}
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -117,6 +120,11 @@ export default function ItemList({
             <span className="text-lg text-slate-800 font-medium">
               {item.name}
             </span>
+            {isReviewMode && item.sharedBy.length > 0 && (
+              <div className="text-sm text-slate-500">
+                Shared by: {item.sharedBy.join(", ")}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 self-end sm:self-center">
             <span className="font-serif text-xl text-indigo-600">
@@ -145,7 +153,7 @@ export default function ItemList({
             </button>
           </div>
         </div>
-        {(isFocused || selectedItemIndex === index) && (
+        {(isFocused || (selectedItemIndex === index && !isReviewMode)) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -294,9 +302,27 @@ export default function ItemList({
         </div>
       </div>
 
-      {processingError && (
+      {processingError && showError && (
         <div className="mb-6">
-          <div className="text-center py-8">
+          <div className="text-center py-8 relative">
+            <button
+              onClick={() => setShowError(false)}
+              className="absolute top-2 right-2 text-slate-400 hover:text-slate-600"
+              aria-label="Dismiss error"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
             <div className="text-red-500 mb-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

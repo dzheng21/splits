@@ -98,6 +98,11 @@ export default function Home() {
   }
 
   const processReceiptResponse = (data: any) => {
+    // Validate the data structure before processing
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid receipt data format");
+    }
+
     // Extract vendor information
     if (data.vendor_info) {
       setVendorInfo({
@@ -158,8 +163,19 @@ export default function Home() {
         console.log("Vision API Response:", result);
 
         if (result.success && result.data) {
-          processReceiptResponse(result.data);
-          console.log("Successfully processed receipt:", result.data);
+          // Check if the response is a string (model explanation/error) or a properly structured object
+          if (typeof result.data === "string") {
+            setProcessingError(`Model response: ${result.data}`);
+            console.log("Model returned explanation:", result.data);
+          } else if (isValidReceiptData(result.data)) {
+            processReceiptResponse(result.data);
+            console.log("Successfully processed receipt:", result.data);
+          } else {
+            setProcessingError(
+              "Received unexpected response format from the model. Please try again or upload a clearer image."
+            );
+            console.error("Invalid receipt data format:", result.data);
+          }
         } else {
           setProcessingError(result.error || "Failed to process receipt");
           console.error("Failed to process receipt:", result.error);
@@ -172,6 +188,18 @@ export default function Home() {
       }
     }
   }
+
+  // Type guard to check if the response has the expected receipt data structure
+  const isValidReceiptData = (data: any): boolean => {
+    return (
+      data &&
+      typeof data === "object" &&
+      // Check for line items
+      (Array.isArray(data.line_items) ||
+        // Or at least has vendor info
+        (data.vendor_info && typeof data.vendor_info === "object"))
+    );
+  };
 
   function nextStep() {
     setStep((prev) => prev + 1);

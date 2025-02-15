@@ -102,46 +102,30 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
         throw new Error(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
       }
 
-      // Create a synthetic FileList with the original file for immediate upload
-      const initialFileList = Object.create(FileList.prototype, {
-        0: { value: file, enumerable: true },
+      // Process the image first
+      const processedFile = await processImage(file);
+
+      // Create a new FileList-like object with the processed file
+      const container = new Blob([await processedFile.arrayBuffer()], {
+        type: processedFile.type,
+      });
+      const finalFile = new File([container], processedFile.name, {
+        type: processedFile.type,
+        lastModified: new Date().getTime(),
+      });
+
+      // Create a synthetic FileList for the processed file
+      const processedFileList = Object.create(FileList.prototype, {
+        0: { value: finalFile, enumerable: true },
         length: { value: 1, enumerable: true },
       });
 
-      // Start the upload process immediately with the original file
-      await onFilesUploaded(initialFileList as FileList);
-
-      // Process the image in the background
-      processImage(file)
-        .then(async (processedFile) => {
-          // Create a new FileList-like object with the processed file
-          const container = new Blob([await processedFile.arrayBuffer()], {
-            type: processedFile.type,
-          });
-          const finalFile = new File([container], processedFile.name, {
-            type: processedFile.type,
-            lastModified: new Date().getTime(),
-          });
-
-          // Create a synthetic FileList for the processed file
-          const processedFileList = Object.create(FileList.prototype, {
-            0: { value: finalFile, enumerable: true },
-            length: { value: 1, enumerable: true },
-          });
-
-          // Upload the processed file
-          await onFilesUploaded(processedFileList as FileList);
-        })
-        .catch((err) => {
-          console.error("Background processing error:", err);
-          // Don't set error since we've already moved on
-        })
-        .finally(() => {
-          setIsProcessing(false);
-        });
+      // Only call onFilesUploaded once with the processed file
+      await onFilesUploaded(processedFileList as FileList);
     } catch (err) {
       setError((err as Error).message);
       console.error("Error handling files:", err);
+    } finally {
       setIsProcessing(false);
     }
   };

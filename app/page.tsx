@@ -8,6 +8,7 @@ import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
 import gpt4oProvider from "./api/VisionProvider";
+import { ocrProvider } from "./api/OcrProvider";
 
 // Font imports
 import { EB_Garamond, Inter } from "next/font/google";
@@ -162,6 +163,14 @@ export default function Home() {
         const result = await gpt4oProvider(base64Data);
         console.log("Vision API Response:", result);
 
+        // Also try OCR processing
+        try {
+          const ocrResult = await ocrProvider(files[0]);
+          console.log("OCR API Response:", ocrResult);
+        } catch (ocrError) {
+          console.log("OCR processing error:", ocrError);
+        }
+
         if (result.success && result.data) {
           // Check if the response is a string (model explanation/error) or a properly structured object
           if (typeof result.data === "string") {
@@ -248,7 +257,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
           {step === 1 && (
             <div className="w-full max-w-2xl mx-auto">
               <PeopleList
@@ -278,7 +286,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
           {step === 2 && (
             <div className="w-full max-w-2xl mx-auto">
               {isLoading && (
@@ -348,7 +355,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
           {step === 3 && (
             <div className="w-full max-w-2xl mx-auto">
               <TipTaxForm
@@ -379,7 +385,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
           {step === 4 && (
             <div className="w-full max-w-2xl mx-auto">
               <Results

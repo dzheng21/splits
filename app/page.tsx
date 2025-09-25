@@ -8,6 +8,7 @@ import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
 import gpt4oProvider from "./api/VisionProvider";
+import o1MiniProvider from "./api/O1MiniProvider";
 
 // Font imports
 import { EB_Garamond, Inter } from "next/font/google";
@@ -159,7 +160,19 @@ export default function Home() {
         const base64File = await fileToBase64(files[0]);
         const base64Data = base64File.split(",")[1] || base64File;
 
-        const result = await gpt4oProvider(base64Data);
+        // Try o1-mini first
+        console.log("Attempting receipt processing with o1-mini...");
+        let result = await o1MiniProvider(base64Data);
+        
+        // If o1-mini fails, fallback to gpt4o
+        if (!result.success) {
+          console.log("o1-mini failed, falling back to gpt4o:", result.error);
+          console.log("Attempting receipt processing with gpt4o...");
+          result = await gpt4oProvider(base64Data);
+        } else {
+          console.log("o1-mini processing successful");
+        }
+        
         console.log("Vision API Response:", result);
 
         if (result.success && result.data) {

@@ -49,13 +49,13 @@ function parseO1MiniResponse(apiResponse: ApiResponse) {
       /"line_items"\s*:\s*\[(.*?)(?:\]|$)/s
     );
 
-    const partialResult: any = {};
+    const partialResult: Record<string, unknown> = {};
 
     // Extract vendor info if available
     if (vendorMatch) {
       try {
         partialResult.vendor_info = JSON.parse(vendorMatch[1]);
-      } catch (e) {
+      } catch {
         console.log("Failed to parse vendor_info");
       }
     }
@@ -94,8 +94,8 @@ function parseO1MiniResponse(apiResponse: ApiResponse) {
         if (items.length > 0) {
           partialResult.line_items = items;
         }
-      } catch (e) {
-        console.log("Failed to parse line_items:", e);
+      } catch {
+        console.log("Failed to parse line_items");
       }
     }
 
@@ -163,7 +163,8 @@ export default async function o1MiniProvider(base64File: string) {
     console.error("Error in o1MiniProvider:", error);
     return {
       success: false,
-      error: (error as Error).message || "Failed to process receipt with O1-mini",
+      error:
+        (error as Error).message || "Failed to process receipt with O1-mini",
     };
   }
 }

@@ -35,7 +35,7 @@ function parseGpt4oResponse(apiResponse: ApiResponse) {
       if (parsed.vendor_info || parsed.line_items) {
         return parsed;
       }
-    } catch (parseError) {
+    } catch {
       console.log(
         "Failed to parse complete JSON, attempting to handle truncation"
       );
@@ -48,13 +48,13 @@ function parseGpt4oResponse(apiResponse: ApiResponse) {
       /"line_items"\s*:\s*\[(.*?)(?:\]|$)/s
     );
 
-    const partialResult: any = {};
+    const partialResult: Record<string, unknown> = {};
 
     // Extract vendor info if available
     if (vendorMatch) {
       try {
         partialResult.vendor_info = JSON.parse(vendorMatch[1]);
-      } catch (e) {
+      } catch {
         console.log("Failed to parse vendor_info");
       }
     }
@@ -93,8 +93,8 @@ function parseGpt4oResponse(apiResponse: ApiResponse) {
         if (items.length > 0) {
           partialResult.line_items = items;
         }
-      } catch (e) {
-        console.log("Failed to parse line_items:", e);
+      } catch {
+        console.log("Failed to parse line_items");
       }
     }
 

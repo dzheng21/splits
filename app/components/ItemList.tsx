@@ -166,7 +166,9 @@ export default function ItemList({
             className="space-y-3"
           >
             <div className="flex justify-between items-center">
-              <p className="text-sm text-slate-500">Who's sharing this item?</p>
+              <p className="text-sm text-slate-500">
+                Who&apos;s sharing this item?
+              </p>
               <div className="flex gap-2">
                 <button
                   onClick={(e) => {
@@ -261,7 +263,7 @@ export default function ItemList({
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label className="block text-sm font-medium text-slate-700">
-            Who's sharing this item?
+            Who&apos;s sharing this item?
           </label>
           <div className="flex gap-2">
             <button

@@ -11,7 +11,7 @@ function parseO4MiniResponse(apiResponse: ApiResponse) {
   try {
     const content = apiResponse?.choices?.[0]?.message?.content;
     if (!content) {
-      console.log("No content in O4-mini response");
+      console.log("No content in o4-mini response");
       return null;
     }
 
@@ -106,7 +106,7 @@ function parseO4MiniResponse(apiResponse: ApiResponse) {
 
     throw new Error("Failed to parse receipt data");
   } catch (e) {
-    console.error("Error processing O4-mini response:", e);
+    console.error("Error processing o4-mini response:", e);
     throw e;
   }
 }
@@ -156,15 +156,24 @@ export default async function o4MiniProvider(base64File: string) {
 
   try {
     const response = await axios.request(config);
-    console.log("O4-mini response:", response.data);
+    console.log("o4-mini response:", response.data);
     const parsed = parseO4MiniResponse(response.data);
     return { success: true, data: parsed };
   } catch (error) {
     console.error("Error in o4MiniProvider:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Response status:", error.response?.status);
+      console.error("Response data:", error.response?.data);
+      console.error("Request config:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+      });
+    }
     return {
       success: false,
       error:
-        (error as Error).message || "Failed to process receipt with O4-mini",
+        (error as Error).message || "Failed to process receipt with o4-mini",
     };
   }
 }

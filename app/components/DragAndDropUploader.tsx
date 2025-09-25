@@ -1,5 +1,4 @@
 import React, { useCallback, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 
 interface DragAndDropUploaderProps {
   onFilesUploaded: (files: FileList) => Promise<void>;
@@ -79,56 +78,59 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
     }
   };
 
-  const handleFiles = async (files: FileList) => {
-    if (files.length === 0) return;
+  const handleFiles = useCallback(
+    async (files: FileList) => {
+      if (files.length === 0) return;
 
-    setIsProcessing(true);
-    setError(null);
+      setIsProcessing(true);
+      setError(null);
 
-    try {
-      const file = files[0];
+      try {
+        const file = files[0];
 
-      // Quick validation before proceeding
-      if (
-        !file.type.startsWith("image/") &&
-        !file.name.toLowerCase().endsWith(".heic") &&
-        !file.name.toLowerCase().endsWith(".heif")
-      ) {
-        throw new Error("Please upload an image file");
+        // Quick validation before proceeding
+        if (
+          !file.type.startsWith("image/") &&
+          !file.name.toLowerCase().endsWith(".heic") &&
+          !file.name.toLowerCase().endsWith(".heif")
+        ) {
+          throw new Error("Please upload an image file");
+        }
+
+        const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB > MAX_FILE_SIZE_MB) {
+          throw new Error(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
+        }
+
+        // Process the image first
+        const processedFile = await processImage(file);
+
+        // Create a new FileList-like object with the processed file
+        const container = new Blob([await processedFile.arrayBuffer()], {
+          type: processedFile.type,
+        });
+        const finalFile = new File([container], processedFile.name, {
+          type: processedFile.type,
+          lastModified: new Date().getTime(),
+        });
+
+        // Create a synthetic FileList for the processed file
+        const processedFileList = Object.create(FileList.prototype, {
+          0: { value: finalFile, enumerable: true },
+          length: { value: 1, enumerable: true },
+        });
+
+        // Only call onFilesUploaded once with the processed file
+        await onFilesUploaded(processedFileList as FileList);
+      } catch (err) {
+        setError((err as Error).message);
+        console.error("Error handling files:", err);
+      } finally {
+        setIsProcessing(false);
       }
-
-      const fileSizeMB = file.size / (1024 * 1024);
-      if (fileSizeMB > MAX_FILE_SIZE_MB) {
-        throw new Error(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
-      }
-
-      // Process the image first
-      const processedFile = await processImage(file);
-
-      // Create a new FileList-like object with the processed file
-      const container = new Blob([await processedFile.arrayBuffer()], {
-        type: processedFile.type,
-      });
-      const finalFile = new File([container], processedFile.name, {
-        type: processedFile.type,
-        lastModified: new Date().getTime(),
-      });
-
-      // Create a synthetic FileList for the processed file
-      const processedFileList = Object.create(FileList.prototype, {
-        0: { value: finalFile, enumerable: true },
-        length: { value: 1, enumerable: true },
-      });
-
-      // Only call onFilesUploaded once with the processed file
-      await onFilesUploaded(processedFileList as FileList);
-    } catch (err) {
-      setError((err as Error).message);
-      console.error("Error handling files:", err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    },
+    [onFilesUploaded]
+  );
 
   const handleDragOver = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -150,7 +152,7 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
         handleFiles(event.dataTransfer.files);
       }
     },
-    [onFilesUploaded]
+    [handleFiles]
   );
 
   const handleClick = useCallback(() => {
@@ -165,7 +167,7 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({
         handleFiles(event.target.files);
       }
     },
-    [onFilesUploaded]
+    [handleFiles]
   );
 
   return (

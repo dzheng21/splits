@@ -7,11 +7,11 @@ interface ApiResponse {
   choices?: { message?: { content?: string } }[];
 }
 
-function parseGpt4oResponse(apiResponse: ApiResponse) {
+function parseO4MiniResponse(apiResponse: ApiResponse) {
   try {
     const content = apiResponse?.choices?.[0]?.message?.content;
     if (!content) {
-      console.log("No content in GPT-4 response");
+      console.log("No content in o4-mini response");
       return null;
     }
 
@@ -35,9 +35,10 @@ function parseGpt4oResponse(apiResponse: ApiResponse) {
       if (parsed.vendor_info || parsed.line_items) {
         return parsed;
       }
-    } catch {
+    } catch (parseError) {
       console.log(
-        "Failed to parse complete JSON, attempting to handle truncation"
+        "Failed to parse complete JSON, attempting to handle truncation:",
+        parseError
       );
     }
 
@@ -105,12 +106,12 @@ function parseGpt4oResponse(apiResponse: ApiResponse) {
 
     throw new Error("Failed to parse receipt data");
   } catch (e) {
-    console.error("Error processing GPT-4 response:", e);
+    console.error("Error processing o4-mini response:", e);
     throw e;
   }
 }
 
-export default async function gpt4oProvider(base64File: string) {
+export default async function o4MiniProvider(base64File: string) {
   const payload = {
     messages: [
       {
@@ -145,24 +146,34 @@ export default async function gpt4oProvider(base64File: string) {
 
   const config = {
     method: "post",
-    url: process.env.GPT4O_ENDPOINT || "YOUR_API_URL",
+    url: process.env.GPTO4_ENDPOINT || "YOUR_API_URL",
     headers: {
       "Content-Type": "application/json",
-      "api-key": process.env.GPT4O_API_KEY || "YOUR_API_KEY",
+      "api-key": process.env.GPTO4_API_KEY || "YOUR_API_KEY",
     },
     data: JSON.stringify(payload),
   };
 
   try {
     const response = await axios.request(config);
-    console.log(response.data);
-    const parsed = parseGpt4oResponse(response.data);
+    console.log("o4-mini response:", response.data);
+    const parsed = parseO4MiniResponse(response.data);
     return { success: true, data: parsed };
   } catch (error) {
-    console.error("Error in gpt4oProvider:", error);
+    console.error("Error in o4MiniProvider:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Response status:", error.response?.status);
+      console.error("Response data:", error.response?.data);
+      console.error("Request config:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+      });
+    }
     return {
       success: false,
-      error: (error as Error).message || "Failed to process receipt",
+      error:
+        (error as Error).message || "Failed to process receipt with o4-mini",
     };
   }
 }

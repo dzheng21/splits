@@ -1,16 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import ReceiptForm from "./components/ReceiptForm";
 import ItemList from "./components/ItemList";
 import PeopleList from "./components/PeopleList";
 import Results from "./components/Results";
 import TipTaxForm from "./components/TipTaxForm";
 import DragAndDropUploader from "./components/DragAndDropUploader";
 import gpt4oProvider from "./api/VisionProvider";
+import o4MiniProvider from "./api/O4MiniProvider";
 
 // Font imports
 import { EB_Garamond, Inter } from "next/font/google";
+
+// Type definitions
+interface ReceiptData {
+  vendor_info?: {
+    name?: string;
+    date?: string;
+  };
+  line_items?: Array<{
+    item_name: string;
+    subtotal?: number;
+    unit_price?: number;
+  }>;
+  totals?: {
+    tax?: number;
+    tip?: number;
+    tip_percentage?: number;
+    subtotal?: number;
+  };
+}
 
 const garamond = EB_Garamond({
   subsets: ["latin"],
@@ -37,10 +56,7 @@ export default function Home() {
     type: "percentage" | "amount";
     value: number;
   }>({ type: "percentage", value: 0 });
-  const [receiptImage, setReceiptImage] = useState<File | null>(null);
-  const [isManual, setIsManual] = useState(false);
   const [step, setStep] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [vendorInfo, setVendorInfo] = useState<{
@@ -80,10 +96,6 @@ export default function Home() {
     );
   };
 
-  const calculateSplit = () => {
-    setStep(4);
-  };
-
   const resetApp = () => {
     setStep(0);
   };
@@ -97,7 +109,7 @@ export default function Home() {
     });
   }
 
-  const processReceiptResponse = (data: any) => {
+  const processReceiptResponse = (data: ReceiptData) => {
     // Validate the data structure before processing
     if (!data || typeof data !== "object") {
       throw new Error("Invalid receipt data format");
@@ -113,7 +125,7 @@ export default function Home() {
 
     // Extract line items
     const processedItems =
-      data.line_items?.map((item: any) => ({
+      data.line_items?.map((item) => ({
         name: item.item_name,
         price: Number(item.subtotal || item.unit_price || 0),
         sharedBy: [], // Initially empty, will be filled when people are added
@@ -159,7 +171,19 @@ export default function Home() {
         const base64File = await fileToBase64(files[0]);
         const base64Data = base64File.split(",")[1] || base64File;
 
-        const result = await gpt4oProvider(base64Data);
+        // Try o4-mini first
+        console.log("Attempting receipt processing with o4-mini...");
+        let result = await o4MiniProvider(base64Data);
+
+        // If o4-mini fails, fallback to gpt4o
+        if (!result.success) {
+          console.log("o4-mini failed, falling back to gpt4o:", result.error);
+          console.log("Attempting receipt processing with gpt4o...");
+          result = await gpt4oProvider(base64Data);
+        } else {
+          console.log("o4-mini processing successful");
+        }
+
         console.log("Vision API Response:", result);
 
         if (result.success && result.data) {
@@ -190,14 +214,19 @@ export default function Home() {
   }
 
   // Type guard to check if the response has the expected receipt data structure
-  const isValidReceiptData = (data: any): boolean => {
+  const isValidReceiptData = (data: unknown): data is ReceiptData => {
+    if (!data || typeof data !== "object") {
+      return false;
+    }
+
+    const receiptData = data as ReceiptData;
     return (
-      data &&
-      typeof data === "object" &&
       // Check for line items
-      (Array.isArray(data.line_items) ||
-        // Or at least has vendor info
-        (data.vendor_info && typeof data.vendor_info === "object"))
+      Array.isArray(receiptData.line_items) ||
+      // Or at least has vendor info
+      Boolean(
+        receiptData.vendor_info && typeof receiptData.vendor_info === "object"
+      )
     );
   };
 
@@ -281,27 +310,6 @@ export default function Home() {
 
           {step === 2 && (
             <div className="w-full max-w-2xl mx-auto">
-              {isLoading && (
-                <div className="mb-4 p-4 bg-indigo-50 text-indigo-700 rounded-xl flex items-center gap-3">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Processing receipt...
-                </div>
-              )}
               <ItemList
                 items={items}
                 onDeleteItem={deleteItem}
@@ -311,21 +319,6 @@ export default function Home() {
                 onUpdateItemShares={updateItemShares}
                 onAddItem={addItem}
               />
-              {/* <button
-                className="mt-6 w-full text-slate-600 font-medium py-4 px-6 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
-                onClick={() => setIsManual(!isManual)}
-              >
-                {isManual ? (
-                  <>
-                    <span className="text-lg">−</span> Hide manual entry
-                  </>
-                ) : (
-                  <>
-                    <span className="text-lg">+</span> Add items manually
-                  </>
-                )}
-              </button> */}
-              {isManual && <ReceiptForm onAddItem={addItem} people={people} />}
               <div className="flex flex-row justify-between w-full mt-6 gap-4">
                 <button
                   onClick={prevStep}
